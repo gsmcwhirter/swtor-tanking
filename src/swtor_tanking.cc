@@ -2,8 +2,6 @@
 #include <v8.h>
 #include <math.h>
 #include <stdlib.h>
-//TODO: remove after testing
-#include <stdio.h>
 
 #include "randomkit.h"
 #include "swtor_tanking.h"
@@ -12,7 +10,6 @@ using namespace node;
 using namespace v8;
 
 extern "C" {
-	//TODO: Add actual optimization stuff here
 	
 	double
 	defenseChance(const unsigned int rating, const double bonus)
@@ -56,13 +53,6 @@ extern "C" {
 		drke = dmgReductionKE(armor, cdata->drAddKE + cdata->drBonus);
 		drie = dmgReductionIE(cdata->drAddIE + cdata->drBonus);
 		
-		printf("%f\n", d);
-		printf("%f\n", s);
-		printf("%f\n", a);
-		printf("%f\n", r);
-		printf("%f\n", drke);
-		printf("%f\n", drie);
-		
 		return   dtypes->KE *
 					(  
 						d + (0.5 * 0.1) + //defended or missed, assuming 50% of all KE attacks at 90% accuracy base
@@ -83,24 +73,6 @@ extern "C" {
 			   				(1.0-s) * drie //not shielded, but reduced
 			   			)
 			   		);
-			   		
-		/*	
-		return dmgTypes['MRKE'] * (\
-             d(r=r_defense) +\
-             0.5 * 0.1 +\
-             (1.0 - d(r=r_defense) - 0.5 * 0.1) * (\
-                 s(r=r_shield) *\
-                     (1 - (1 - a(r=r_absorb)) * (1 - drmr(r=r_armor))) +\
-                 (1-s(r=r_shield)) * \
-                     drmr(r=r_armor))) +\
-             dmgTypes['FTIE'] * (\
-             res +\
-             (1.0 - res) * (\
-                 s(r=r_shield) *\
-                     (1 - (1 - a(r=r_absorb)) * (1 - drft)) +\
-                 (1-s(r=r_shield)) *\
-                     drft)))
-    	*/
 	}
 	
 	statdist_t *
@@ -118,27 +90,6 @@ extern "C" {
 		
 		return stats;
 	}
-	
-	/* need these for annealing, but since the annealing I was doing is really just random sampling, I leave them out
-	
-	double
-	temperature(const double pct_time)
-	{
-		return 1.0 / pct_time;
-	}
-	
-	double 
-	acceptProb(const double currentTarget, const double newTarget, const double temp)
-	{
-		if (newTarget > currentTarget){
-			return 1.0;
-		}
-		else {
-			return exp((newTarget - currentTarget) / temp);
-		}
-	}
-	
-	*/
 	
 	oresult_t *
 	optimalStats(dmgtypes_t *dtypes, classdata_t *cdata, unsigned int statBudget, unsigned int armor, unsigned int stimBonus, unsigned int numSamples, rk_state *rand_state_ptr)
@@ -296,6 +247,7 @@ Optimizer(const Arguments& args)
 	return scope.Close(Undefined());
 }
 
+/*
 Handle<Value> 
 Test(const Arguments& args)
 {
@@ -344,12 +296,13 @@ Test(const Arguments& args)
 	
 	return scope.Close(Undefined());
 }
+*/
 
 void 
 init(Handle<Object> target)
 {
 	NODE_SET_METHOD(target, "optimize", Optimizer);
-	NODE_SET_METHOD(target, "test", Test);
+	//NODE_SET_METHOD(target, "test", Test);
 }
 
 // Here, "swtor_tanking" has to be the actual name of the module.

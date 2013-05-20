@@ -15,7 +15,7 @@ var classData = {
 ,	resistPct: 0.02
 };
 
-/*
+
 binding.optimize(classData, 2100, 6033, function (err, results){
   if (err){
     console.log("Error!");
@@ -35,7 +35,3 @@ binding.optimize(classData, 2100, null, function (err, results){
   console.log(err);
   console.log(results);
 });
-
-console.log();
-*/
-console.log(binding.test());
