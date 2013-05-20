@@ -37,6 +37,7 @@ var optimizer = require("bindings")("swtor_tanking_optimizer.node")
       ,	resistPct: 0.02
       }
     }
+  //The following data is from http://www.swtor.com/community/showthread.php?t=616779
   , otherData = {
       dmgKE: 0.790044607 //defendable damage percent 
     , dmgIE: 0.209955393 //resistable damage percent
