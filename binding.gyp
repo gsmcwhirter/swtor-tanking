@@ -1,9 +1,9 @@
 {
   "targets": [
     {
-      "target_name": "swtor_tanking"
+      "target_name": "swtor_tanking_optimizer"
     , "sources": [
-        "src/swtor_tanking.cc"
+        "src/swtor_tanking_optimizer.cc"
       , "src/randomkit.c"
       ]
     , "libraries": [
@@ -16,7 +16,6 @@
     , "defines": [
       
     ]
-    ,
     }
   ]
 }

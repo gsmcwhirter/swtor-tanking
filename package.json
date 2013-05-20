@@ -1,0 +1,22 @@
+{
+  "name": "swtor-tanking",
+  "version": "0.0.1",
+  "description": "Tank stat optimization package for SW:TOR",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "install": "node-gyp rebuild"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://gsmcwhirter@github.com/swtor-apps/swtor-tanking.git"
+  },
+  "author": "Gregory McWhirter",
+  "license": "MIT",
+  "gypfile": true,
+  "readmeFilename": "Readme.md",
+  "gitHead": "bae401baa80c5204ed0f2ff1eb565dad856baaa3",
+  "dependencies": {
+    "bindings": "~1.1.0"
+  }
+}
