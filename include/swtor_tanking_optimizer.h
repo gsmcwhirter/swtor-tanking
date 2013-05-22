@@ -76,24 +76,46 @@ struct ClickRelic {
 typedef struct ClickRelic clickrelic_t;
 
 union Relic {
-	procrelic_t prelic;
-	clickrelic_t crelic;
+	procrelic_t *prelic;
+	clickrelic_t *crelic;
 };
 
 typedef union Relic relic_t; 
 
 double relicBonusPct(const unsigned int base_rating, const unsigned int bonus_rating, unsigned int stat);
-double procRelicUptime(procrelic_t relic, dmgtypes_t *dtypes, double def_miss_pct, double resist_pct, double shield_pct, double time_per_swing);
-double clickRelicUptime(clickrelic_t relic);
+double procRelicUptime(procrelic_t *relic, dmgtypes_t *dtypes, double def_miss_pct, double resist_pct, double shield_pct, double time_per_swing);
+double clickRelicUptime(clickrelic_t *relic);
 double defenseChance(const unsigned int rating, const double bonus);
 double shieldChance(const unsigned int rating, const double bonus);
 double absorbChance(const unsigned int rating, const double bonus);
 double dmgReductionKE(const unsigned int armor, const double bonus);
 double dmgReductionIE(const double bonus);
-double mitigation(dmgtypes_t *dtypes, classdata_t *cdata, statdist_t *stats, unsigned int armor, unsigned int stimDefense, unsigned int num_relics, relic_t **relics, unsigned int *relictypes);
+double mitigation(dmgtypes_t *dtypes, classdata_t *cdata, statdist_t *stats, unsigned int armor, unsigned int stimDefense, int num_relics, relic_t **relics, unsigned int *relictypes);
 statdist_t * randomStats(shieldbounds_t * sbounds, const unsigned int budget, rk_state *rand_state_ptr);
-oresult_t * optimalStats(dmgtypes_t *dtypes, shieldbounds_t * sbounds, classdata_t *cdata, unsigned int statBudget, unsigned int armor, unsigned int stimBonus, unsigned int numSamples, rk_state *rand_state_ptr);
+oresult_t * optimalStats(dmgtypes_t *dtypes, shieldbounds_t * sbounds, classdata_t *cdata, unsigned int statBudget, unsigned int armor, int num_relics, relic_t **relics, unsigned int *relictypes, unsigned int stimBonus, unsigned int numSamples, rk_state *rand_state_ptr);
 
 }
+
+using namespace v8;
+using namespace node;
+
+struct OptimizerTask {
+	uv_work_t req;
+	dmgtypes_t *dtypes;
+	shieldbounds_t *sbounds;
+	classdata_t *cdata;
+	unsigned int statBudget;
+	unsigned int armor;
+	unsigned int numRelics;
+	relic_t **relics;
+	unsigned int *relictypes;
+	unsigned int stimBonus;
+	unsigned int numSamples;
+	rk_state *rand_state;
+	oresult_t *output;
+	Persistent<Function> callback;
+};
+
+typedef struct OptimizerTask opttask_t;
 
 #endif

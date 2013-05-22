@@ -37,6 +37,124 @@ var optimizer = require("bindings")("swtor_tanking_optimizer.node")
       ,	resistPct: 0.02
       }
     }
+  , relicData = {
+      arkanian: { //to fix
+        redoubt: {
+          type: 1 //proc
+        , stat: 1 //defense
+        , rating: 510
+        , rate: 0.30
+        , duration: 6
+        , cooldown: 20
+        , can_stack: 0
+        } 
+      , shield_amp: {
+          type: 1 //proc
+        , stat: 3 //absorb
+        , rating: 510
+        , rate: 0.30
+        , duration: 6
+        , cooldown: 20
+        , can_stack: 0
+        }
+      , imperiling: {
+          type: 2 //click
+        , stat1: 1 //defense
+        , stat2: 0 //none
+        , rating1: 395
+        , rating2: 0
+        , duration: 30
+        , cooldown: 120 //confirm?
+        }
+      , shrouded: {
+          type: 2 //click
+        , stat1: 2 //shield
+        , stat2: 3 //absorb
+        , rating1: 245
+        , rating2: 245
+        , duration: 30
+        , cooldown: 120 //confirm?
+        }
+      }
+    , underworld: {
+        redoubt: {
+          type: 1 //proc
+        , stat: 1 //defense
+        , rating: 550
+        , rate: 0.30
+        , duration: 6
+        , cooldown: 20
+        , can_stack: 0
+        } 
+      , shield_amp: {
+          type: 1 //proc
+        , stat: 3 //absorb
+        , rating: 550
+        , rate: 0.30
+        , duration: 6
+        , cooldown: 20
+        , can_stack: 0
+        }
+      , imperiling: {
+          type: 2 //click
+        , stat1: 1 //defense
+        , stat2: 0 //none
+        , rating1: 425
+        , rating2: 0
+        , duration: 30
+        , cooldown: 120 //confirm?
+        }
+      , shrouded: {
+          type: 2 //click
+        , stat1: 2 //shield
+        , stat2: 3 //absorb
+        , rating1: 265
+        , rating2: 265
+        , duration: 30
+        , cooldown: 120 //confirm?
+        }
+      }
+    , partisan: {
+        redoubt: {
+          type: 1 //proc
+        , stat: 1 //defense
+        , rating: 410
+        , rate: 0.30
+        , duration: 6
+        , cooldown: 20
+        , can_stack: 1
+        } 
+      , shield_amp: {
+          type: 1 //proc
+        , stat: 3 //absorb
+        , rating: 410
+        , rate: 0.30
+        , duration: 6
+        , cooldown: 20
+        , can_stack: 1
+        }
+      }
+    , conqueror: {
+        redoubt: {
+          type: 1 //proc
+        , stat: 1 //defense
+        , rating: 435
+        , rate: 0.30
+        , duration: 6
+        , cooldown: 20
+        , can_stack: 1
+        } 
+      , shield_amp: {
+          type: 1 //proc
+        , stat: 3 //absorb
+        , rating: 435
+        , rate: 0.30
+        , duration: 6
+        , cooldown: 20
+        , can_stack: 1
+        }
+      }
+    }
   //The following data is from http://www.swtor.com/community/showthread.php?t=616779
   , otherData = {
       dmgKE: 0.790044607 //defendable damage percent 
@@ -48,9 +166,10 @@ var optimizer = require("bindings")("swtor_tanking_optimizer.node")
   
 module.exports = {
   optimize: function (klass, statBudget, armor, callback){
-    optimizer.optimize(otherData, classData[klass], statBudget, armor, 70, callback);
+    optimizer.optimize(otherData, classData[klass], {numRelics: 0}, statBudget, armor, 70, callback);
   }
 , optimizer: optimizer
 , classData: classData
 , otherData: otherData
+, relicData: relicData
 };

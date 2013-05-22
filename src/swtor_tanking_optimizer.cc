@@ -2,6 +2,10 @@
 #include <v8.h>
 #include <math.h>
 #include <stdlib.h>
+#include <new>
+
+#include <unistd.h>
+#include <uv.h>
 
 #include "randomkit.h"
 #include "swtor_tanking_optimizer.h"
@@ -35,10 +39,10 @@ extern "C" {
 	}
 	
 	double
-	procRelicUptime(procrelic_t relic, dmgtypes_t *dtypes, double def_miss_pct, double resist_pct, double shield_pct, double time_per_swing)
+	procRelicUptime(procrelic_t *relic, dmgtypes_t *dtypes, double def_miss_pct, double resist_pct, double shield_pct, double time_per_swing)
 	{
 		double modifier;
-		switch (relic.stat){
+		switch (relic->stat){
 			case RELIC_STATTYPE_ABSORB:
 				modifier = shield_pct;
 				break;
@@ -49,14 +53,14 @@ extern "C" {
 				break;
 		}
 		
-		double mean_swings = 1.0 / (relic.rate * modifier * ((1.0 - def_miss_pct) * dtypes->KE + (1.0 - resist_pct) * dtypes->IE));
-		return relic.duration_time / (mean_swings * time_per_swing + relic.cooldown_time);
+		double mean_swings = 1.0 / (relic->rate * modifier * ((1.0 - def_miss_pct) * dtypes->KE + (1.0 - resist_pct) * dtypes->IE));
+		return relic->duration_time / (mean_swings * time_per_swing + relic->cooldown_time);
 	}
 	
 	double
-	clickRelicUptime(clickrelic_t relic)
+	clickRelicUptime(clickrelic_t *relic)
 	{
-		return relic.duration_time / relic.cooldown_time;
+		return relic->duration_time / relic->cooldown_time;
 	}
 	
 	double
@@ -90,12 +94,12 @@ extern "C" {
 	}
 	
 	double
-	mitigation(dmgtypes_t *dtypes, classdata_t *cdata, statdist_t *stats, unsigned int armor, unsigned int stimDefense, unsigned int num_relics, relic_t **relics, unsigned int *relictypes)
+	mitigation(dmgtypes_t *dtypes, classdata_t *cdata, statdist_t *stats, unsigned int armor, unsigned int stimDefense, int num_relics, relic_t **relics, unsigned int *relictypes)
 	{
 		double d, s, a, r, drke, drie;
 		
 		double dbonus = 0.0, sbonus = 0.0, abonus = 0.0;
-		unsigned int i;
+		int i;
 		
 		d = defenseChance(stats->defRating + stimDefense, cdata->defenseAdd + cdata->defenseBonus);
 		s = shieldChance(stats->shieldRating, cdata->shieldAdd + cdata->shieldBonus);
@@ -108,16 +112,16 @@ extern "C" {
 			relic_t * relic = *(relics + i);
 			switch (*(relictypes + i)){
 				case RELIC_TYPE_PROC:
-					if (!has_proc_relic || (relic->prelic).can_stack){
+					if (!has_proc_relic || (relic->prelic)->can_stack){
 						has_proc_relic = 1;
-						if ((relic->prelic).stat == RELIC_STATTYPE_DEF){
-							dbonus = dbonus + relicBonusPct(stats->defRating + stimDefense, (relic->prelic).bonus_rating, (relic->prelic).stat) * procRelicUptime(relic->prelic, dtypes, d + (0.5 * 0.1), r, s, 1.2);	
+						if ((relic->prelic)->stat == RELIC_STATTYPE_DEF){
+							dbonus = dbonus + relicBonusPct(stats->defRating + stimDefense, (relic->prelic)->bonus_rating, (relic->prelic)->stat) * procRelicUptime(relic->prelic, dtypes, d + (0.5 * 0.1), r, s, 1.2);	
 						}
-						else if ((relic->prelic).stat == RELIC_STATTYPE_SHIELD){
-							sbonus = sbonus + relicBonusPct(stats->shieldRating, (relic->prelic).bonus_rating, (relic->prelic).stat) * procRelicUptime(relic->prelic, dtypes, d + (0.5 * 0.1), r, s, 1.2);
+						else if ((relic->prelic)->stat == RELIC_STATTYPE_SHIELD){
+							sbonus = sbonus + relicBonusPct(stats->shieldRating, (relic->prelic)->bonus_rating, (relic->prelic)->stat) * procRelicUptime(relic->prelic, dtypes, d + (0.5 * 0.1), r, s, 1.2);
 						}
-						else if ((relic->prelic).stat == RELIC_STATTYPE_ABSORB){
-							abonus = abonus + relicBonusPct(stats->absorbRating, (relic->prelic).bonus_rating, (relic->prelic).stat) * procRelicUptime(relic->prelic, dtypes, d + (0.5 * 0.1), r, s, 1.2);
+						else if ((relic->prelic)->stat == RELIC_STATTYPE_ABSORB){
+							abonus = abonus + relicBonusPct(stats->absorbRating, (relic->prelic)->bonus_rating, (relic->prelic)->stat) * procRelicUptime(relic->prelic, dtypes, d + (0.5 * 0.1), r, s, 1.2);
 						}
 					}
 					break;
@@ -126,25 +130,25 @@ extern "C" {
 						has_click_relic = 1;
 						
 						//stat 1
-						if ((relic->crelic).stat1 == RELIC_STATTYPE_DEF){
-							dbonus = dbonus + relicBonusPct(stats->defRating + stimDefense, (relic->crelic).bonus_rating1, (relic->crelic).stat1) * clickRelicUptime(relic->crelic);	
+						if ((relic->crelic)->stat1 == RELIC_STATTYPE_DEF){
+							dbonus = dbonus + relicBonusPct(stats->defRating + stimDefense, (relic->crelic)->bonus_rating1, (relic->crelic)->stat1) * clickRelicUptime(relic->crelic);	
 						}
-						else if ((relic->crelic).stat1 == RELIC_STATTYPE_SHIELD){
-							sbonus = sbonus + relicBonusPct(stats->shieldRating, (relic->crelic).bonus_rating1, (relic->crelic).stat1) * clickRelicUptime(relic->crelic);
+						else if ((relic->crelic)->stat1 == RELIC_STATTYPE_SHIELD){
+							sbonus = sbonus + relicBonusPct(stats->shieldRating, (relic->crelic)->bonus_rating1, (relic->crelic)->stat1) * clickRelicUptime(relic->crelic);
 						}
-						else if ((relic->crelic).stat1 == RELIC_STATTYPE_ABSORB){
-							abonus = abonus + relicBonusPct(stats->absorbRating, (relic->crelic).bonus_rating1, (relic->crelic).stat1) * clickRelicUptime(relic->crelic);
+						else if ((relic->crelic)->stat1 == RELIC_STATTYPE_ABSORB){
+							abonus = abonus + relicBonusPct(stats->absorbRating, (relic->crelic)->bonus_rating1, (relic->crelic)->stat1) * clickRelicUptime(relic->crelic);
 						}
 						
 						//stat 2
-						if ((relic->crelic).stat2 == RELIC_STATTYPE_DEF){
-							dbonus = dbonus + relicBonusPct(stats->defRating + stimDefense, (relic->crelic).bonus_rating2, (relic->crelic).stat2) * clickRelicUptime(relic->crelic);	
+						if ((relic->crelic)->stat2 == RELIC_STATTYPE_DEF){
+							dbonus = dbonus + relicBonusPct(stats->defRating + stimDefense, (relic->crelic)->bonus_rating2, (relic->crelic)->stat2) * clickRelicUptime(relic->crelic);	
 						}
-						else if ((relic->crelic).stat2 == RELIC_STATTYPE_SHIELD){
-							sbonus = sbonus + relicBonusPct(stats->shieldRating, (relic->crelic).bonus_rating2, (relic->crelic).stat2) * clickRelicUptime(relic->crelic);
+						else if ((relic->crelic)->stat2 == RELIC_STATTYPE_SHIELD){
+							sbonus = sbonus + relicBonusPct(stats->shieldRating, (relic->crelic)->bonus_rating2, (relic->crelic)->stat2) * clickRelicUptime(relic->crelic);
 						}
-						else if ((relic->crelic).stat2 == RELIC_STATTYPE_ABSORB){
-							abonus = abonus + relicBonusPct(stats->absorbRating, (relic->crelic).bonus_rating2, (relic->crelic).stat2) * clickRelicUptime(relic->crelic);
+						else if ((relic->crelic)->stat2 == RELIC_STATTYPE_ABSORB){
+							abonus = abonus + relicBonusPct(stats->absorbRating, (relic->crelic)->bonus_rating2, (relic->crelic)->stat2) * clickRelicUptime(relic->crelic);
 						}
 						
 					}
@@ -198,7 +202,7 @@ extern "C" {
 	}
 	
 	oresult_t *
-	optimalStats(dmgtypes_t *dtypes, shieldbounds_t * sbounds, classdata_t *cdata, unsigned int statBudget, unsigned int armor, unsigned int stimBonus, unsigned int numSamples, rk_state *rand_state_ptr)
+	optimalStats(dmgtypes_t *dtypes, shieldbounds_t * sbounds, classdata_t *cdata, unsigned int statBudget, unsigned int armor, int num_relics, relic_t **relics, unsigned int *relictypes, unsigned int stimBonus, unsigned int numSamples, rk_state *rand_state_ptr)
 	{
 		oresult_t *bestResult = (oresult_t *)malloc(sizeof(oresult_t));
 		
@@ -206,7 +210,7 @@ extern "C" {
 		double currentMitigation;
 		
 		currentStats = randomStats(sbounds, statBudget, rand_state_ptr);
-		currentMitigation = mitigation(dtypes, cdata, currentStats, armor, stimBonus, 0, NULL, NULL);
+		currentMitigation = mitigation(dtypes, cdata, currentStats, armor, stimBonus, num_relics, relics, relictypes);
 		
 		bestResult->stats = currentStats;
 		bestResult->mitigation = currentMitigation;
@@ -214,7 +218,7 @@ extern "C" {
 		unsigned int i;
 		for (i = 0; i < numSamples; i++){
 			currentStats = randomStats(sbounds, statBudget, rand_state_ptr);
-			currentMitigation = mitigation(dtypes, cdata, currentStats, armor, stimBonus, 0, NULL, NULL);
+			currentMitigation = mitigation(dtypes, cdata, currentStats, armor, stimBonus, num_relics, relics, relictypes);
 			
 			if (currentMitigation > bestResult->mitigation){
 				free(bestResult->stats);
@@ -230,13 +234,83 @@ extern "C" {
 	}
 }
 
+void 
+DoCalculations(uv_work_t *r)
+{
+	opttask_t *task = reinterpret_cast<opttask_t *>(r->data);
+
+	task->output = optimalStats(task->dtypes, task->sbounds, task->cdata, task->statBudget, task->armor, task->numRelics, task->relics, task->relictypes, task->stimBonus, task->numSamples, task->rand_state);
+}
+
+void
+AfterCalculations(uv_work_t *r)
+{
+	HandleScope scope;
+	
+	opttask_t *task = reinterpret_cast<opttask_t *>(r->data);
+	oresult_t *result = task->output;
+	
+	const unsigned int cbargc = 2;
+	Handle<Value> cbargv[cbargc] = { Null(), Null() };
+	
+	TryCatch try_catch;
+	
+	Local<Object> retObj = Object::New();
+	retObj->Set(String::NewSymbol("defRating"), Number::New((result->stats)->defRating));
+	retObj->Set(String::NewSymbol("shieldRating"), Number::New((result->stats)->shieldRating));
+	retObj->Set(String::NewSymbol("absorbRating"), Number::New((result->stats)->absorbRating));
+	retObj->Set(String::NewSymbol("defPctNBNS"), Number::New(defenseChance((result->stats)->defRating, (task->cdata)->defenseAdd)));
+	retObj->Set(String::NewSymbol("defPctNB"), Number::New(defenseChance((result->stats)->defRating + task->stimBonus, (task->cdata)->defenseAdd)));
+	retObj->Set(String::NewSymbol("defPct"), Number::New(defenseChance((result->stats)->defRating + task->stimBonus, (task->cdata)->defenseAdd + (task->cdata)->defenseBonus)));
+	retObj->Set(String::NewSymbol("shieldPctNB"), Number::New(shieldChance((result->stats)->shieldRating, (task->cdata)->shieldAdd)));
+	retObj->Set(String::NewSymbol("shieldPct"), Number::New(shieldChance((result->stats)->shieldRating, (task->cdata)->shieldAdd + (task->cdata)->shieldBonus)));
+	retObj->Set(String::NewSymbol("absorbPctNB"), Number::New(absorbChance((result->stats)->absorbRating, (task->cdata)->absorbAdd)));
+	retObj->Set(String::NewSymbol("absorbPct"), Number::New(absorbChance((result->stats)->absorbRating, (task->cdata)->absorbAdd + (task->cdata)->absorbBonus)));
+	retObj->Set(String::NewSymbol("drKENB"), Number::New(dmgReductionKE(task->armor, (task->cdata)->drAddKE)));
+	retObj->Set(String::NewSymbol("drKE"), Number::New(dmgReductionKE(task->armor, (task->cdata)->drAddKE + (task->cdata)->drBonus)));
+	retObj->Set(String::NewSymbol("drIENB"), Number::New(dmgReductionIE((task->cdata)->drAddIE)));
+	retObj->Set(String::NewSymbol("drIE"), Number::New(dmgReductionIE((task->cdata)->drAddIE + (task->cdata)->drBonus)));
+	retObj->Set(String::NewSymbol("mitigation"), Number::New(result->mitigation));
+	
+	cbargv[1] = Local<Value>::New(retObj);
+	
+	task->callback->Call(Context::GetCurrent()->Global(), cbargc, cbargv);
+	
+	//cleanup
+	free(result->stats);
+	free(result);
+	
+	unsigned int i;
+	
+	task->callback.Dispose();
+	free(task->dtypes);
+	free(task->sbounds);
+	free(task->cdata);
+	for (i = 0; i < task->numRelics; i++){
+		free(*(task->relics + i));
+	}
+	free(task->relics);
+	free(task->relictypes);
+	free(task->rand_state);
+  	delete task;
+		
+	if (try_catch.HasCaught()) {
+		FatalException(try_catch);
+	}
+	
+}
+
 Handle<Value> 
 Optimizer(const Arguments& args)
 {
 	HandleScope scope;
+	
+	//Seed the random number generator
+	rk_state *rand_state = new rk_state;
+	rk_randomseed(rand_state);
 		
-	//Handle 5-7 arguments: dmgTypes/shieldBounds, classData, statBudget, armor, [stimBonus, [numSamples]], callback
-	if (args.Length() < 5 || args.Length() > 7){
+	//Handle 5-7 arguments: dmgTypes/shieldBounds, classData, relicData, statBudget, armor, [stimBonus, [numSamples]], callback
+	if (args.Length() < 5 || args.Length() > 8){
 		ThrowException(Exception::TypeError(String::New("Wrong number of arguments")));
     	return scope.Close(Undefined());
 	}
@@ -244,10 +318,10 @@ Optimizer(const Arguments& args)
 	//Set up callback
 	Local<Function> cb = Local<Function>::Cast(args[args.Length() - 1]);
 	const unsigned int cbargc = 2;
-	Local<Value> cbargv[cbargc] = { Local<Value>::New(Undefined()), Local<Value>::New(Undefined()) };
+	Handle<Value> cbargv[cbargc] = { Null(), Null() };
 	
 	//Check parameter types for the main arguments
-	if (!args[0]->IsObject() || !args[1]->IsObject() || !args[2]->IsNumber() || !args[3]->IsNumber() || (args.Length() > 5 && !args[4]->IsNumber()) || (args.Length() > 6 && !args[5]->IsNumber())){
+	if (!args[0]->IsObject() || !args[1]->IsObject() || !args[2]->IsObject() || !args[3]->IsNumber() || !args[4]->IsNumber() || (args.Length() > 6 && !args[5]->IsNumber()) || (args.Length() > 7 && !args[6]->IsNumber())){
 		cbargv[0] = Local<Value>::New(Exception::TypeError(String::New("Wrong arguments")));
 		cb->Call(Context::GetCurrent()->Global(), cbargc, cbargv);
 		
@@ -257,7 +331,7 @@ Optimizer(const Arguments& args)
 	unsigned int i;
 	//Check the damage type values (KE and IE) and shield bounds
 	const unsigned int dtCt = 4;
-	Local<String> dmgTypesProps[dtCt] = {
+	const Local<String> dmgTypesProps[dtCt] = {
 		String::NewSymbol("dmgKE"), String::NewSymbol("dmgIE"),
 		String::NewSymbol("shieldLow"), String::NewSymbol("shieldHigh")
 	};
@@ -273,7 +347,7 @@ Optimizer(const Arguments& args)
 	
 	//Check the keys and values for classData (defenseAdd, defenseBonus, shieldAdd, shieldBonus, absorbAdd, absorbBonus, drAddKE, drAddIE, drBonus, resistPct)
 	const unsigned int propCt = 10;
-	Local<String> classDataProps[propCt] = {
+	const Local<String> classDataProps[propCt] = {
 		String::NewSymbol("defenseAdd"), String::NewSymbol("defenseBonus"),
 		String::NewSymbol("shieldAdd"), String::NewSymbol("shieldBonus"),
 		String::NewSymbol("absorbAdd"), String::NewSymbol("absorbBonus"),
@@ -290,71 +364,168 @@ Optimizer(const Arguments& args)
 		}
 	}
 	
-	//Seed the random number generator
-	rk_state rand_state;
-	rk_randomseed(&rand_state);
+	unsigned int num_relics = 0;
+	unsigned int *relictypes = new unsigned int[2];
+	*(relictypes + 0) = 0;
+	*(relictypes + 1) = 0;
+	
+	relic_t **relics = new relic_t*[2];
+	
+	relic_t *relic1 = new relic_t;
+	relic_t *relic2 = new relic_t;
+	const Local<String> nRelics = String::NewSymbol("numRelics");
+	const Local<String> r1name = String::NewSymbol("relic1");
+	const Local<String> r2name = String::NewSymbol("relic2");
+	const Local<String> type = String::NewSymbol("type");
+	Local<Object> tmpobj;
+	
+	if (!((args[2]->ToObject())->Get(nRelics))->IsNumber()){
+		cbargv[0] = Local<Value>::New(Exception::TypeError(String::New("Wrong numRelics value")));
+		cb->Call(Context::GetCurrent()->Global(), cbargc, cbargv);
+	
+		return scope.Close(Undefined());
+	}
+	else {
+		num_relics = ((args[2]->ToObject())->Get(nRelics))->ToNumber()->Value();
+		
+		if (num_relics < 0 || num_relics > 2){
+			cbargv[0] = Local<Value>::New(Exception::TypeError(String::New("Wrong numRelics value")));
+			cb->Call(Context::GetCurrent()->Global(), cbargc, cbargv);
+	
+			return scope.Close(Undefined());
+		}
+	}
+	
+	if (num_relics >= 1){
+		if (!((args[2]->ToObject())->Get(r1name))->IsObject()){
+			cbargv[0] = Local<Value>::New(Exception::TypeError(String::New("Wrong relic1 value")));
+			cb->Call(Context::GetCurrent()->Global(), cbargc, cbargv);
+	
+			return scope.Close(Undefined());
+		}
+		else {
+			tmpobj = ((args[2]->ToObject())->Get(r1name))->ToObject();
+			relictypes[0] = (tmpobj->Get(type))->ToNumber()->Value();
+			
+			if (relictypes[0] == RELIC_TYPE_PROC){
+				procrelic_t *pr1 = new procrelic_t;
+				pr1->stat = (tmpobj->Get(String::NewSymbol("stat")))->ToNumber()->Value();
+				pr1->bonus_rating = (tmpobj->Get(String::NewSymbol("rating")))->ToNumber()->Value();
+				pr1->rate = (tmpobj->Get(String::NewSymbol("rate")))->ToNumber()->Value();
+				pr1->duration_time = (tmpobj->Get(String::NewSymbol("duration")))->ToNumber()->Value();
+				pr1->cooldown_time = (tmpobj->Get(String::NewSymbol("cooldown")))->ToNumber()->Value();
+				pr1->can_stack = (tmpobj->Get(String::NewSymbol("can_stack")))->ToNumber()->Value();
+				
+				relic1->prelic = pr1;
+			}
+			else if (relictypes[0] == RELIC_TYPE_CLICK){
+				clickrelic_t *cr1 = new clickrelic_t;
+				cr1->stat1 = (tmpobj->Get(String::NewSymbol("stat1")))->ToNumber()->Value();
+				cr1->stat2 = (tmpobj->Get(String::NewSymbol("stat2")))->ToNumber()->Value();
+				cr1->bonus_rating1 = (tmpobj->Get(String::NewSymbol("rating1")))->ToNumber()->Value();
+				cr1->bonus_rating2 = (tmpobj->Get(String::NewSymbol("rating2")))->ToNumber()->Value();
+				cr1->duration_time = (tmpobj->Get(String::NewSymbol("duration")))->ToNumber()->Value();
+				cr1->cooldown_time = (tmpobj->Get(String::NewSymbol("cooldown")))->ToNumber()->Value();
+				
+				relic1->crelic = cr1;
+			}
+			
+			relics[0] = relic1;
+		}
+	}
+	
+	if (num_relics >= 2){
+		if (!((args[2]->ToObject())->Get(r2name))->IsObject()){
+			cbargv[0] = Local<Value>::New(Exception::TypeError(String::New("Wrong relic2 value")));
+			cb->Call(Context::GetCurrent()->Global(), cbargc, cbargv);
+	
+			return scope.Close(Undefined());
+		}
+		else {
+			tmpobj = ((args[2]->ToObject())->Get(r2name))->ToObject();
+			relictypes[1] = (tmpobj->Get(type))->ToNumber()->Value();
+			
+			if (relictypes[1] == RELIC_TYPE_PROC){
+				procrelic_t *pr2 = new procrelic_t;
+				pr2->stat = (tmpobj->Get(String::NewSymbol("stat")))->ToNumber()->Value();
+				pr2->bonus_rating = (tmpobj->Get(String::NewSymbol("rating")))->ToNumber()->Value();
+				pr2->rate = (tmpobj->Get(String::NewSymbol("rate")))->ToNumber()->Value();
+				pr2->duration_time = (tmpobj->Get(String::NewSymbol("duration")))->ToNumber()->Value();
+				pr2->cooldown_time = (tmpobj->Get(String::NewSymbol("cooldown")))->ToNumber()->Value();
+				pr2->can_stack = (tmpobj->Get(String::NewSymbol("can_stack")))->ToNumber()->Value();
+				
+				relic2->prelic = pr2;
+			}
+			else if (relictypes[1] == RELIC_TYPE_CLICK){
+				clickrelic_t *cr2 = new clickrelic_t;
+				cr2->stat1 = (tmpobj->Get(String::NewSymbol("stat1")))->ToNumber()->Value();
+				cr2->stat2 = (tmpobj->Get(String::NewSymbol("stat2")))->ToNumber()->Value();
+				cr2->bonus_rating1 = (tmpobj->Get(String::NewSymbol("rating1")))->ToNumber()->Value();
+				cr2->bonus_rating2 = (tmpobj->Get(String::NewSymbol("rating2")))->ToNumber()->Value();
+				cr2->duration_time = (tmpobj->Get(String::NewSymbol("duration")))->ToNumber()->Value();
+				cr2->cooldown_time = (tmpobj->Get(String::NewSymbol("cooldown")))->ToNumber()->Value();
+				
+				relic2->crelic = cr2;
+			}
+			
+			relics[1] = relic2;
+		}
+	}	
 	
 	//Fill in damage type percentages
-	dmgtypes_t dtypes;
-	dtypes.KE = (((args[0]->ToObject())->Get(dmgTypesProps[0]))->ToNumber())->Value();
-	dtypes.IE = (((args[0]->ToObject())->Get(dmgTypesProps[1]))->ToNumber())->Value();
+	dmgtypes_t *dtypes = new dmgtypes_t;
+	dtypes->KE = (((args[0]->ToObject())->Get(dmgTypesProps[0]))->ToNumber())->Value();
+	dtypes->IE = (((args[0]->ToObject())->Get(dmgTypesProps[1]))->ToNumber())->Value();
 	
-	shieldbounds_t sbounds;
-	sbounds.low = (((args[0]->ToObject())->Get(dmgTypesProps[2]))->ToNumber())->Value();
-	sbounds.high = (((args[0]->ToObject())->Get(dmgTypesProps[3]))->ToNumber())->Value();
+	shieldbounds_t *sbounds = new shieldbounds_t;
+	sbounds->low = (((args[0]->ToObject())->Get(dmgTypesProps[2]))->ToNumber())->Value();
+	sbounds->high = (((args[0]->ToObject())->Get(dmgTypesProps[3]))->ToNumber())->Value();
 	
 	//Fill with class data to be passed in: defenseAdd, defenseBonus, shieldAdd, shieldBonus, absorbAdd, absorbBonus, drAddKE, drAddIE, drBonus, resistPct 
-	classdata_t cdata;
-	cdata.defenseAdd = (((args[1]->ToObject())->Get(classDataProps[0]))->ToNumber())->Value();
-	cdata.defenseBonus = (((args[1]->ToObject())->Get(classDataProps[1]))->ToNumber())->Value();
-	cdata.shieldAdd = (((args[1]->ToObject())->Get(classDataProps[2]))->ToNumber())->Value();
-	cdata.shieldBonus = (((args[1]->ToObject())->Get(classDataProps[3]))->ToNumber())->Value();
-	cdata.absorbAdd = (((args[1]->ToObject())->Get(classDataProps[4]))->ToNumber())->Value();
-	cdata.absorbBonus = (((args[1]->ToObject())->Get(classDataProps[5]))->ToNumber())->Value();
-	cdata.drAddKE = (((args[1]->ToObject())->Get(classDataProps[6]))->ToNumber())->Value();
-	cdata.drAddIE = (((args[1]->ToObject())->Get(classDataProps[7]))->ToNumber())->Value();
-	cdata.drBonus = (((args[1]->ToObject())->Get(classDataProps[8]))->ToNumber())->Value();
-	cdata.resistPct = (((args[1]->ToObject())->Get(classDataProps[9]))->ToNumber())->Value();
+	classdata_t *cdata = new classdata_t;
+	cdata->defenseAdd = (((args[1]->ToObject())->Get(classDataProps[0]))->ToNumber())->Value();
+	cdata->defenseBonus = (((args[1]->ToObject())->Get(classDataProps[1]))->ToNumber())->Value();
+	cdata->shieldAdd = (((args[1]->ToObject())->Get(classDataProps[2]))->ToNumber())->Value();
+	cdata->shieldBonus = (((args[1]->ToObject())->Get(classDataProps[3]))->ToNumber())->Value();
+	cdata->absorbAdd = (((args[1]->ToObject())->Get(classDataProps[4]))->ToNumber())->Value();
+	cdata->absorbBonus = (((args[1]->ToObject())->Get(classDataProps[5]))->ToNumber())->Value();
+	cdata->drAddKE = (((args[1]->ToObject())->Get(classDataProps[6]))->ToNumber())->Value();
+	cdata->drAddIE = (((args[1]->ToObject())->Get(classDataProps[7]))->ToNumber())->Value();
+	cdata->drBonus = (((args[1]->ToObject())->Get(classDataProps[8]))->ToNumber())->Value();
+	cdata->resistPct = (((args[1]->ToObject())->Get(classDataProps[9]))->ToNumber())->Value();
 	
-	unsigned int statBudget = (args[2]->ToNumber())->Value();
-	unsigned int armor = (args[3]->ToNumber())->Value();
+	unsigned int statBudget = (args[3]->ToNumber())->Value();
+	unsigned int armor = (args[4]->ToNumber())->Value();
 	
 	unsigned int stimBonus = 0;
-	if (args.Length() > 5){
-		stimBonus = (args[4]->ToNumber())->Value();
+	if (args.Length() > 6){
+		stimBonus = (args[5]->ToNumber())->Value();
 	}
 	
 	unsigned int numSamples = 1000000;
-	if (args.Length() > 6){
-		numSamples = (args[5]->ToNumber())->Value();
+	if (args.Length() > 7){
+		numSamples = (args[6]->ToNumber())->Value();
 	}
 	
-	oresult_t *result = optimalStats(&dtypes, &sbounds, &cdata, statBudget, armor, stimBonus, numSamples, &rand_state);
+	opttask_t *task = new opttask_t;
+	task->req.data = task;
+	task->dtypes = dtypes;
+	task->sbounds = sbounds;
+	task->cdata = cdata;
+	task->statBudget = statBudget;
+	task->armor = armor;
+	task->numRelics = num_relics;
+	task->relics = relics;
+	task->relictypes = relictypes;
+	task->stimBonus = stimBonus;
+	task->numSamples = numSamples;
+	task->rand_state = rand_state;
+	task->output = NULL;
+	task->callback = Persistent<Function>::New(cb);
 	
-	Local<Object> retObj = Object::New();
-	retObj->Set(String::NewSymbol("defRating"), Number::New((result->stats)->defRating));
-	retObj->Set(String::NewSymbol("shieldRating"), Number::New((result->stats)->shieldRating));
-	retObj->Set(String::NewSymbol("absorbRating"), Number::New((result->stats)->absorbRating));
-	retObj->Set(String::NewSymbol("defPctNBNS"), Number::New(defenseChance((result->stats)->defRating, cdata.defenseAdd)));
-	retObj->Set(String::NewSymbol("defPctNB"), Number::New(defenseChance((result->stats)->defRating + stimBonus, cdata.defenseAdd)));
-	retObj->Set(String::NewSymbol("defPct"), Number::New(defenseChance((result->stats)->defRating + stimBonus, cdata.defenseAdd + cdata.defenseBonus)));
-	retObj->Set(String::NewSymbol("shieldPctNB"), Number::New(shieldChance((result->stats)->shieldRating, cdata.shieldAdd)));
-	retObj->Set(String::NewSymbol("shieldPct"), Number::New(shieldChance((result->stats)->shieldRating, cdata.shieldAdd + cdata.shieldBonus)));
-	retObj->Set(String::NewSymbol("absorbPctNB"), Number::New(absorbChance((result->stats)->absorbRating, cdata.absorbAdd)));
-	retObj->Set(String::NewSymbol("absorbPct"), Number::New(absorbChance((result->stats)->absorbRating, cdata.absorbAdd + cdata.absorbBonus)));
-	retObj->Set(String::NewSymbol("drKENB"), Number::New(dmgReductionKE(armor, cdata.drAddKE)));
-	retObj->Set(String::NewSymbol("drKE"), Number::New(dmgReductionKE(armor, cdata.drAddKE + cdata.drBonus)));
-	retObj->Set(String::NewSymbol("drIENB"), Number::New(dmgReductionIE(cdata.drAddIE)));
-	retObj->Set(String::NewSymbol("drIE"), Number::New(dmgReductionIE(cdata.drAddIE + cdata.drBonus)));
-	retObj->Set(String::NewSymbol("mitigation"), Number::New(result->mitigation));
+	uv_queue_work(uv_default_loop(), &task->req, DoCalculations, (uv_after_work_cb)AfterCalculations);
 	
-	free(result->stats);
-	free(result);
-	
-	cbargv[1] = Local<Value>::New(retObj);
-	cb->Call(Context::GetCurrent()->Global(), cbargc, cbargv);
-		
-	return scope.Close(Undefined());
+	return Undefined();
 }
 
 void 

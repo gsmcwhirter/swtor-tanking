@@ -3,7 +3,7 @@ var assert = require('assert')
   ;
 
 
-sto.optimizer.optimize(sto.otherData, sto.classData.shadow, 2100, 6033, 70, function (err, results){
+sto.optimizer.optimize(sto.otherData, sto.classData.shadow, {numRelics: 0}, 2100, 6033, 70, function (err, results){
   if (err){
     console.log("Error!");
   }
@@ -14,7 +14,7 @@ sto.optimizer.optimize(sto.otherData, sto.classData.shadow, 2100, 6033, 70, func
 
 console.log();
 
-sto.optimize('vanguard', 2100, 9033, function (err, results){
+sto.optimizer.optimize(sto.otherData, sto.classData.shadow, {numRelics: 2, relic1: sto.relicData.arkanian.redoubt, relic2: sto.relicData.conqueror.shield_amp}, 2100, 6033, 70, function (err, results){
   if (err){
     console.log("Error!");
   }
@@ -25,7 +25,7 @@ sto.optimize('vanguard', 2100, 9033, function (err, results){
 
 console.log();
 
-sto.optimize('guardian', 2100, 9033, function (err, results){
+sto.optimizer.optimize(sto.otherData, sto.classData.shadow, {numRelics: 2, relic1: sto.relicData.arkanian.redoubt, relic2: sto.relicData.conqueror.redoubt}, 2100, 6033, 70, function (err, results){
   if (err){
     console.log("Error!");
   }
