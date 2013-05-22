@@ -34,7 +34,7 @@ typedef struct StatDistribution statdist_t;
 
 struct DamageTypes {
 	double MRKE;
-	double FTKE
+	double FTKE;
 	double FTIE;
 };
 

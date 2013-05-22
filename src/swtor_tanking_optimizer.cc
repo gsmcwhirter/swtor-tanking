@@ -53,7 +53,7 @@ extern "C" {
 				break;
 		}
 		
-		double mean_swings = 1.0 / (relic->rate * modifier * ((1.0 - def_miss_pct) * dtypes->KE + (1.0 - resist_pct) * dtypes->IE));
+		double mean_swings = 1.0 / (relic->rate * modifier * ((1.0 - def_miss_pct) * dtypes->MRKE + (1.0 - resist_pct) * (dtypes->FTKE + dtypes->FTIE)));
 		return relic->duration_time / (mean_swings * time_per_swing + relic->cooldown_time);
 	}
 	
@@ -189,7 +189,7 @@ extern "C" {
 			   			)
 			   		)
 			   	+ dtypes->FTIE *
-			   		s(
+			   		(
 			   			r + //resisted
 			   			(1.0-r) * drie //can't shield IE damage
 			   		);
