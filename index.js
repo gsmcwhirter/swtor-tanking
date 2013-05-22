@@ -233,8 +233,9 @@ var optimizer = require("bindings")("swtor_tanking_optimizer.node")
     }
   //The following data is from http://www.swtor.com/community/showthread.php?t=616779
   , otherData = {
-      dmgKE: 0.790044607 //defendable damage percent 
-    , dmgIE: 0.209955393 //resistable damage percent
+      dmgMRKE: 0.7793 //defendable KE damage percent
+    , dmgFTKE: 0.207 //resistable KE damage percent
+    , dmgIE: 0.0137 //resistable IE damage percent
     , shieldLow: 0.364663353 //lower bound on shield as a percent of budget, based on arkanian
     , shieldHigh: 0.658429434 //upper bound on shield as a percent of budget, based on arkanian
     }

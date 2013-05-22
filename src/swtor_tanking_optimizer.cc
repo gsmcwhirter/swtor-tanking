@@ -168,7 +168,7 @@ extern "C" {
 		drke = dmgReductionKE(armor, cdata->drAddKE + cdata->drBonus);
 		drie = dmgReductionIE(cdata->drAddIE + cdata->drBonus);
 		
-		return   dtypes->KE *
+		return   dtypes->MRKE *
 					(  
 						d + (0.5 * 0.1) + //defended or missed, assuming 50% of all KE attacks at 90% accuracy base
 					 	(1.0 - d - (0.5 * 0.1)) * ( //hit
@@ -178,16 +178,22 @@ extern "C" {
 					 		(1.0-s) * drke //not shielded, but reduced
 					 	)
 					)
-			   + dtypes->IE *
+			   + dtypes->FTKE *
 			   		(
 			   			r + //resisted
 			   			(1.0-r) * (
 			   				s * ( //shielded
-			   					1.0 - (1.0-a) * (1.0-drie) //absorbed and reduced
+			   					1.0 - (1.0-a) * (1.0-drke) //absorbed and reduced
 			   				) +
-			   				(1.0-s) * drie //not shielded, but reduced
+			   				(1.0-s) * drke //not shielded, but reduced
 			   			)
+			   		)
+			   	+ dtypes->FTIE *
+			   		s(
+			   			r + //resisted
+			   			(1.0-r) * drie //can't shield IE damage
 			   		);
+			   		
 	}
 	
 	statdist_t *
@@ -333,9 +339,9 @@ Optimizer(const Arguments& args)
 	
 	unsigned int i;
 	//Check the damage type values (KE and IE) and shield bounds
-	const unsigned int dtCt = 4;
+	const unsigned int dtCt = 5;
 	const Local<String> dmgTypesProps[dtCt] = {
-		String::NewSymbol("dmgKE"), String::NewSymbol("dmgIE"),
+		String::NewSymbol("dmgMRKE"), String::NewSymbol("dmgFTKE"), String::NewSymbol("dmgFTIE"),
 		String::NewSymbol("shieldLow"), String::NewSymbol("shieldHigh")
 	};
 	
@@ -477,12 +483,13 @@ Optimizer(const Arguments& args)
 	
 	//Fill in damage type percentages
 	dmgtypes_t *dtypes = new dmgtypes_t;
-	dtypes->KE = (((args[0]->ToObject())->Get(dmgTypesProps[0]))->ToNumber())->Value();
-	dtypes->IE = (((args[0]->ToObject())->Get(dmgTypesProps[1]))->ToNumber())->Value();
+	dtypes->MRKE = (((args[0]->ToObject())->Get(dmgTypesProps[0]))->ToNumber())->Value();
+	dtypes->FTKE = (((args[0]->ToObject())->Get(dmgTypesProps[1]))->ToNumber())->Value();
+	dtypes->FTIE = (((args[0]->ToObject())->Get(dmgTypesProps[2]))->ToNumber())->Value();
 	
 	shieldbounds_t *sbounds = new shieldbounds_t;
-	sbounds->low = (((args[0]->ToObject())->Get(dmgTypesProps[2]))->ToNumber())->Value();
-	sbounds->high = (((args[0]->ToObject())->Get(dmgTypesProps[3]))->ToNumber())->Value();
+	sbounds->low = (((args[0]->ToObject())->Get(dmgTypesProps[3]))->ToNumber())->Value();
+	sbounds->high = (((args[0]->ToObject())->Get(dmgTypesProps[4]))->ToNumber())->Value();
 	
 	//Fill with class data to be passed in: defenseAdd, defenseBonus, shieldAdd, shieldBonus, absorbAdd, absorbBonus, drAddKE, drAddIE, drBonus, resistPct 
 	classdata_t *cdata = new classdata_t;
