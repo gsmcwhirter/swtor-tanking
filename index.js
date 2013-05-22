@@ -52,7 +52,7 @@ var optimizer = require("bindings")("swtor_tanking_optimizer.node")
           type: 1 //proc
         , stat: 3 //absorb
         , rating: 510
-        , rate: 0.30
+        , rate: 1.0
         , duration: 6
         , cooldown: 20
         , can_stack: 0
@@ -90,7 +90,7 @@ var optimizer = require("bindings")("swtor_tanking_optimizer.node")
           type: 1 //proc
         , stat: 3 //absorb
         , rating: 550
-        , rate: 0.30
+        , rate: 1.0
         , duration: 6
         , cooldown: 20
         , can_stack: 0
@@ -128,7 +128,7 @@ var optimizer = require("bindings")("swtor_tanking_optimizer.node")
           type: 1 //proc
         , stat: 3 //absorb
         , rating: 455
-        , rate: 0.30
+        , rate: 1.0
         , duration: 6
         , cooldown: 20
         , can_stack: 0
@@ -166,7 +166,7 @@ var optimizer = require("bindings")("swtor_tanking_optimizer.node")
           type: 1 //proc
         , stat: 3 //absorb
         , rating: 415 //not verified
-        , rate: 0.30
+        , rate: 1.0
         , duration: 6
         , cooldown: 20
         , can_stack: 0
@@ -204,7 +204,7 @@ var optimizer = require("bindings")("swtor_tanking_optimizer.node")
           type: 1 //proc
         , stat: 3 //absorb
         , rating: 410
-        , rate: 0.30
+        , rate: 1.0
         , duration: 6
         , cooldown: 20
         , can_stack: 1
@@ -224,10 +224,32 @@ var optimizer = require("bindings")("swtor_tanking_optimizer.node")
           type: 1 //proc
         , stat: 3 //absorb
         , rating: 435
-        , rate: 0.30
+        , rate: 1.0
         , duration: 6
         , cooldown: 20
         , can_stack: 1
+        }
+      }
+    , elitewarhero: {
+        shield_amp: {
+          type: 1 //proc
+        , stat: 3 //absorb
+        , rating: 430
+        , rate: 1.0
+        , duration: 6
+        , cooldown: 20
+        , can_stack: 0
+        }
+      }
+    , warhero: {
+        shield_amp: {
+          type: 1 //proc
+        , stat: 3 //absorb
+        , rating: 405
+        , rate: 1.0
+        , duration: 6
+        , cooldown: 20
+        , can_stack: 0
         }
       }
     }
