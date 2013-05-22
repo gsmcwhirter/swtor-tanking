@@ -20,6 +20,7 @@ struct ClassData {
 	double drAddIE;
 	double drBonus;
 	double resistPct; 
+	unsigned int useKW;
 };
 
 typedef struct ClassData classdata_t;
@@ -83,6 +84,7 @@ union Relic {
 
 typedef union Relic relic_t; 
 
+double kineticWardAvgAbsorbBonus(dmgtypes_t *dtypes, double def_miss_pct, double resist_pct, double shield_pct, double time_per_swing);
 double relicBonusPct(const unsigned int base_rating, const unsigned int bonus_rating, unsigned int stat);
 double procRelicUptime(procrelic_t *relic, dmgtypes_t *dtypes, double def_miss_pct, double resist_pct, double shield_pct, double time_per_swing);
 double clickRelicUptime(clickrelic_t *relic);
@@ -91,9 +93,9 @@ double shieldChance(const unsigned int rating, const double bonus);
 double absorbChance(const unsigned int rating, const double bonus);
 double dmgReductionKE(const unsigned int armor, const double bonus);
 double dmgReductionIE(const double bonus);
-double mitigation(dmgtypes_t *dtypes, classdata_t *cdata, statdist_t *stats, unsigned int armor, unsigned int stimDefense, int num_relics, relic_t **relics, unsigned int *relictypes);
+double mitigation(dmgtypes_t *dtypes, classdata_t *cdata, statdist_t *stats, unsigned int armor, unsigned int stimDefense, int num_relics, relic_t **relics, unsigned int *relictypes, double time_per_swing);
 statdist_t * randomStats(shieldbounds_t * sbounds, const unsigned int budget, rk_state *rand_state_ptr);
-oresult_t * optimalStats(dmgtypes_t *dtypes, shieldbounds_t * sbounds, classdata_t *cdata, unsigned int statBudget, unsigned int armor, int num_relics, relic_t **relics, unsigned int *relictypes, unsigned int stimBonus, unsigned int numSamples, rk_state *rand_state_ptr);
+oresult_t * optimalStats(dmgtypes_t *dtypes, shieldbounds_t * sbounds, classdata_t *cdata, unsigned int statBudget, unsigned int armor, int num_relics, relic_t **relics, unsigned int *relictypes, unsigned int stimBonus, double time_per_swing, unsigned int numSamples, rk_state *rand_state_ptr);
 
 }
 
@@ -112,6 +114,7 @@ struct OptimizerTask {
 	unsigned int *relictypes;
 	unsigned int stimBonus;
 	unsigned int numSamples;
+	double time_per_swing;
 	rk_state *rand_state;
 	oresult_t *output;
 	Persistent<Function> callback;

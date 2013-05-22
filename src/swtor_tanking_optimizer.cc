@@ -16,6 +16,28 @@ using namespace v8;
 extern "C" {
 
 	double
+	kineticWardAvgAbsorbBonus(dmgtypes_t *dtypes, double def_miss_pct, double resist_pct, double shield_pct, double time_per_swing)
+	{
+		double shield_rate = shield_pct * ((1.0 - def_miss_pct) * dtypes->MRKE + (1.0 - resist_pct) * dtypes->FTKE);
+		double swing_per_shield = 1.0 / shield_rate;
+		double time_to_shield = swing_per_shield * time_per_swing;
+		
+		double t = 0.0;
+		double bonus_in_time = 0.0;
+		int stacks = 0;
+		for (stacks = 0; stacks <= 8 && t < 20.0; stacks++){
+			t += time_to_shield;
+			bonus_in_time += (double)stacks * 0.01 * time_to_shield;
+		}
+		
+		if (t < 20.0){
+			bonus_in_time += 0.08 * (20.0 - t);
+		}
+		
+		return bonus_in_time / 20.0;
+	}
+
+	double
 	relicBonusPct(const unsigned int base_rating, const unsigned int bonus_rating, unsigned int stat)
 	{
 		double delta;
@@ -94,7 +116,7 @@ extern "C" {
 	}
 	
 	double
-	mitigation(dmgtypes_t *dtypes, classdata_t *cdata, statdist_t *stats, unsigned int armor, unsigned int stimDefense, int num_relics, relic_t **relics, unsigned int *relictypes)
+	mitigation(dmgtypes_t *dtypes, classdata_t *cdata, statdist_t *stats, unsigned int armor, unsigned int stimDefense, int num_relics, relic_t **relics, unsigned int *relictypes, double time_per_swing)
 	{
 		double d, s, a, r, drke, drie;
 		
@@ -118,13 +140,13 @@ extern "C" {
 						}
 						
 						if ((relic->prelic)->stat == RELIC_STATTYPE_DEF){
-							dbonus = dbonus + relicBonusPct(stats->defRating + stimDefense, (relic->prelic)->bonus_rating, (relic->prelic)->stat) * procRelicUptime(relic->prelic, dtypes, d + (0.5 * 0.1), r, s, 1.2);	
+							dbonus = dbonus + relicBonusPct(stats->defRating + stimDefense, (relic->prelic)->bonus_rating, (relic->prelic)->stat) * procRelicUptime(relic->prelic, dtypes, d + (0.5 * 0.1), r, s, time_per_swing);	
 						}
 						else if ((relic->prelic)->stat == RELIC_STATTYPE_SHIELD){
-							sbonus = sbonus + relicBonusPct(stats->shieldRating, (relic->prelic)->bonus_rating, (relic->prelic)->stat) * procRelicUptime(relic->prelic, dtypes, d + (0.5 * 0.1), r, s, 1.2);
+							sbonus = sbonus + relicBonusPct(stats->shieldRating, (relic->prelic)->bonus_rating, (relic->prelic)->stat) * procRelicUptime(relic->prelic, dtypes, d + (0.5 * 0.1), r, s, time_per_swing);
 						}
 						else if ((relic->prelic)->stat == RELIC_STATTYPE_ABSORB){
-							abonus = abonus + relicBonusPct(stats->absorbRating, (relic->prelic)->bonus_rating, (relic->prelic)->stat) * procRelicUptime(relic->prelic, dtypes, d + (0.5 * 0.1), r, s, 1.2);
+							abonus = abonus + relicBonusPct(stats->absorbRating, (relic->prelic)->bonus_rating, (relic->prelic)->stat) * procRelicUptime(relic->prelic, dtypes, d + (0.5 * 0.1), r, s, time_per_swing);
 						}
 					}
 					break;
@@ -162,9 +184,15 @@ extern "C" {
 		}
 		
 		d = defenseChance(stats->defRating + stimDefense, cdata->defenseAdd + cdata->defenseBonus + dbonus);
+		//r is above
 		s = shieldChance(stats->shieldRating, cdata->shieldAdd + cdata->shieldBonus + sbonus);
-		a = absorbChance(stats->absorbRating, cdata->absorbAdd + cdata->absorbBonus + abonus);
-		r = cdata->resistPct;
+		
+		double kwbonus = 0.0;
+		if (cdata->useKW){
+			kwbonus = kineticWardAvgAbsorbBonus(dtypes, d, r, s, time_per_swing);
+		}
+		
+		a = absorbChance(stats->absorbRating, cdata->absorbAdd + cdata->absorbBonus + abonus + kwbonus);
 		drke = dmgReductionKE(armor, cdata->drAddKE + cdata->drBonus);
 		drie = dmgReductionIE(cdata->drAddIE + cdata->drBonus);
 		
@@ -211,7 +239,7 @@ extern "C" {
 	}
 	
 	oresult_t *
-	optimalStats(dmgtypes_t *dtypes, shieldbounds_t * sbounds, classdata_t *cdata, unsigned int statBudget, unsigned int armor, int num_relics, relic_t **relics, unsigned int *relictypes, unsigned int stimBonus, unsigned int numSamples, rk_state *rand_state_ptr)
+	optimalStats(dmgtypes_t *dtypes, shieldbounds_t * sbounds, classdata_t *cdata, unsigned int statBudget, unsigned int armor, int num_relics, relic_t **relics, unsigned int *relictypes, unsigned int stimBonus, double time_per_swing, unsigned int numSamples, rk_state *rand_state_ptr)
 	{
 		oresult_t *bestResult = (oresult_t *)malloc(sizeof(oresult_t));
 		
@@ -219,7 +247,7 @@ extern "C" {
 		double currentMitigation;
 		
 		currentStats = randomStats(sbounds, statBudget, rand_state_ptr);
-		currentMitigation = mitigation(dtypes, cdata, currentStats, armor, stimBonus, num_relics, relics, relictypes);
+		currentMitigation = mitigation(dtypes, cdata, currentStats, armor, stimBonus, num_relics, relics, relictypes, time_per_swing);
 		
 		bestResult->stats = currentStats;
 		bestResult->mitigation = currentMitigation;
@@ -227,7 +255,7 @@ extern "C" {
 		unsigned int i;
 		for (i = 0; i < numSamples; i++){
 			currentStats = randomStats(sbounds, statBudget, rand_state_ptr);
-			currentMitigation = mitigation(dtypes, cdata, currentStats, armor, stimBonus, num_relics, relics, relictypes);
+			currentMitigation = mitigation(dtypes, cdata, currentStats, armor, stimBonus, num_relics, relics, relictypes, time_per_swing);
 			
 			if (currentMitigation > bestResult->mitigation){
 				free(bestResult->stats);
@@ -248,7 +276,7 @@ DoCalculations(uv_work_t *r)
 {
 	opttask_t *task = reinterpret_cast<opttask_t *>(r->data);
 
-	task->output = optimalStats(task->dtypes, task->sbounds, task->cdata, task->statBudget, task->armor, task->numRelics, task->relics, task->relictypes, task->stimBonus, task->numSamples, task->rand_state);
+	task->output = optimalStats(task->dtypes, task->sbounds, task->cdata, task->statBudget, task->armor, task->numRelics, task->relics, task->relictypes, task->stimBonus, task->time_per_swing, task->numSamples, task->rand_state);
 }
 
 void
@@ -339,10 +367,10 @@ Optimizer(const Arguments& args)
 	
 	unsigned int i;
 	//Check the damage type values (KE and IE) and shield bounds
-	const unsigned int dtCt = 5;
+	const unsigned int dtCt = 6;
 	const Local<String> dmgTypesProps[dtCt] = {
 		String::NewSymbol("dmgMRKE"), String::NewSymbol("dmgFTKE"), String::NewSymbol("dmgFTIE"),
-		String::NewSymbol("shieldLow"), String::NewSymbol("shieldHigh")
+		String::NewSymbol("shieldLow"), String::NewSymbol("shieldHigh"), String::NewSymbol("timePerSwing")
 	};
 	
 	for (i = 0; i < dtCt; i++){
@@ -356,13 +384,14 @@ Optimizer(const Arguments& args)
 	
 	
 	//Check the keys and values for classData (defenseAdd, defenseBonus, shieldAdd, shieldBonus, absorbAdd, absorbBonus, drAddKE, drAddIE, drBonus, resistPct)
-	const unsigned int propCt = 10;
+	const unsigned int propCt = 11;
 	const Local<String> classDataProps[propCt] = {
 		String::NewSymbol("defenseAdd"), String::NewSymbol("defenseBonus"),
 		String::NewSymbol("shieldAdd"), String::NewSymbol("shieldBonus"),
 		String::NewSymbol("absorbAdd"), String::NewSymbol("absorbBonus"),
 		String::NewSymbol("drAddKE"), String::NewSymbol("drAddIE"),
-		String::NewSymbol("drBonus"), String::NewSymbol("resistPct")
+		String::NewSymbol("drBonus"), String::NewSymbol("resistPct"),
+		String::NewSymbol("useKW")
 	};
 	
 	for (i = 0; i < propCt; i++){
@@ -492,6 +521,8 @@ Optimizer(const Arguments& args)
 	sbounds->low = (((args[0]->ToObject())->Get(dmgTypesProps[3]))->ToNumber())->Value();
 	sbounds->high = (((args[0]->ToObject())->Get(dmgTypesProps[4]))->ToNumber())->Value();
 	
+	double time_per_swing = (((args[0]->ToObject())->Get(dmgTypesProps[5]))->ToNumber())->Value();
+	
 	//Fill with class data to be passed in: defenseAdd, defenseBonus, shieldAdd, shieldBonus, absorbAdd, absorbBonus, drAddKE, drAddIE, drBonus, resistPct 
 	classdata_t *cdata = new classdata_t;
 	cdata->defenseAdd = (((args[1]->ToObject())->Get(classDataProps[0]))->ToNumber())->Value();
@@ -504,6 +535,7 @@ Optimizer(const Arguments& args)
 	cdata->drAddIE = (((args[1]->ToObject())->Get(classDataProps[7]))->ToNumber())->Value();
 	cdata->drBonus = (((args[1]->ToObject())->Get(classDataProps[8]))->ToNumber())->Value();
 	cdata->resistPct = (((args[1]->ToObject())->Get(classDataProps[9]))->ToNumber())->Value();
+	cdata->useKW = (((args[1]->ToObject())->Get(classDataProps[10]))->ToNumber())->Value();
 	
 	unsigned int statBudget = (args[3]->ToNumber())->Value();
 	unsigned int armor = (args[4]->ToNumber())->Value();
@@ -530,6 +562,7 @@ Optimizer(const Arguments& args)
 	task->relictypes = relictypes;
 	task->stimBonus = stimBonus;
 	task->numSamples = numSamples;
+	task->time_per_swing = time_per_swing;
 	task->rand_state = rand_state;
 	task->output = NULL;
 	task->callback = Persistent<Function>::New(cb);
