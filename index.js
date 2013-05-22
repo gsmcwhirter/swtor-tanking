@@ -7,22 +7,22 @@ var optimizer = require("bindings")("swtor_tanking_optimizer.node")
       ,	shieldBonus: 0.20 //kinetic ward w/ 2-piece
       ,	absorbAdd: 0.04 //in tree
       ,	absorbBonus: 0.036 //average value from kinetic ward
-      ,	drAddKE: 0.02 //in tree
+      ,	drAddKE: 0.04 //in tree w/ 4-piece
       ,	drAddIE: 0.13 //in tree w/ 4-piece
       ,	drBonus: 0.05 //slow time
       ,	resistPct: 0.02 
       }
     , 'guardian': {
-        defenseAdd: 0.03
-      , defenseBonus: 0.06
-      , shieldAdd: 0.19
-      ,	shieldBonus: 0.0
-      ,	absorbAdd: 0.0
-      ,	absorbBonus: 0.0
-      ,	drAddKE: 0.0
-      ,	drAddIE: 0.0
-      ,	drBonus: 0.0
-      ,	resistPct: 0.06
+        defenseAdd: 0.03 //single saber mastery
+      , defenseBonus: 0.10 //5% riposte, 5% dust storm
+      , shieldAdd: 0.19 //15% soresu form, 4% in tree
+      ,	shieldBonus: 0.0 //correct
+      ,	absorbAdd: 0.0 //correct
+      ,	absorbBonus: 0.0 //correct
+      ,	drAddKE: 0.06 //soresu form
+      ,	drAddIE: 0.11 //enure talent and soresu form
+      ,	drBonus: 0.03 //guardian slash
+      ,	resistPct: 0.00 // really?
       }
     , 'vanguard': {
         defenseAdd: 0.06 //4% in tree, 2% from 4-piece
