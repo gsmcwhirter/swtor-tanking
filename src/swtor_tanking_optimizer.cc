@@ -113,7 +113,10 @@ extern "C" {
 			switch (*(relictypes + i)){
 				case RELIC_TYPE_PROC:
 					if (!has_proc_relic || (relic->prelic)->can_stack){
-						has_proc_relic = 1;
+						if (!(relic->prelic)->can_stack){
+							has_proc_relic = 1;	
+						}
+						
 						if ((relic->prelic)->stat == RELIC_STATTYPE_DEF){
 							dbonus = dbonus + relicBonusPct(stats->defRating + stimDefense, (relic->prelic)->bonus_rating, (relic->prelic)->stat) * procRelicUptime(relic->prelic, dtypes, d + (0.5 * 0.1), r, s, 1.2);	
 						}
