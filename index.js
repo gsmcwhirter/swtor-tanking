@@ -1,7 +1,7 @@
 var optimizer = require("bindings")("swtor_tanking_optimizer.node")
   , classData = {
       'shadow': {
-        defenseAdd: 0.06 //in tree
+        defenseAdd: 0.11 // 6% in tree, 5% naturally higher base %
       , defenseBonus: 0.05 //force breach debuff
       , shieldAdd: 0.15 //combat technique
       ,	shieldBonus: 0.20 //kinetic ward w/ 2-piece
