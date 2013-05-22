@@ -235,7 +235,7 @@ var optimizer = require("bindings")("swtor_tanking_optimizer.node")
   , otherData = {
       dmgMRKE: 0.7793 //defendable KE damage percent
     , dmgFTKE: 0.207 //resistable KE damage percent
-    , dmgIE: 0.0137 //resistable IE damage percent
+    , dmgFTIE: 0.0137 //resistable IE damage percent
     , shieldLow: 0.364663353 //lower bound on shield as a percent of budget, based on arkanian
     , shieldHigh: 0.658429434 //upper bound on shield as a percent of budget, based on arkanian
     }

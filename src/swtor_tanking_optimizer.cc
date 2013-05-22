@@ -354,6 +354,7 @@ Optimizer(const Arguments& args)
 		}
 	}
 	
+	
 	//Check the keys and values for classData (defenseAdd, defenseBonus, shieldAdd, shieldBonus, absorbAdd, absorbBonus, drAddKE, drAddIE, drBonus, resistPct)
 	const unsigned int propCt = 10;
 	const Local<String> classDataProps[propCt] = {
