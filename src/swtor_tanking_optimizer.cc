@@ -276,7 +276,7 @@ DoCalculations(uv_work_t *r)
 {
 	opttask_t *task = reinterpret_cast<opttask_t *>(r->data);
 
-	task->output = optimalStats(task->dtypes, task->sbounds, task->cdata, task->statBudget, task->armor, task->numRelics, task->relics, task->relictypes, task->stimBonus, task->time_per_swing, task->numSamples, task->rand_state);
+	task->output = optimalStats(task->dtypes, task->sbounds, task->cdata, (task->startingStats)->defRating + (task->startingStats)->shieldRating + (task->startingStats)->absorbRating, task->armor, task->numRelics, task->relics, task->relictypes, task->stimBonus, task->time_per_swing, task->numSamples, task->rand_state);
 }
 
 void
@@ -293,21 +293,45 @@ AfterCalculations(uv_work_t *r)
 	TryCatch try_catch;
 	
 	Local<Object> retObj = Object::New();
-	retObj->Set(String::NewSymbol("defRating"), Number::New((result->stats)->defRating));
-	retObj->Set(String::NewSymbol("shieldRating"), Number::New((result->stats)->shieldRating));
-	retObj->Set(String::NewSymbol("absorbRating"), Number::New((result->stats)->absorbRating));
-	retObj->Set(String::NewSymbol("defPctNBNS"), Number::New(defenseChance((result->stats)->defRating, (task->cdata)->defenseAdd)));
-	retObj->Set(String::NewSymbol("defPctNB"), Number::New(defenseChance((result->stats)->defRating + task->stimBonus, (task->cdata)->defenseAdd)));
-	retObj->Set(String::NewSymbol("defPct"), Number::New(defenseChance((result->stats)->defRating + task->stimBonus, (task->cdata)->defenseAdd + (task->cdata)->defenseBonus)));
-	retObj->Set(String::NewSymbol("shieldPctNB"), Number::New(shieldChance((result->stats)->shieldRating, (task->cdata)->shieldAdd)));
-	retObj->Set(String::NewSymbol("shieldPct"), Number::New(shieldChance((result->stats)->shieldRating, (task->cdata)->shieldAdd + (task->cdata)->shieldBonus)));
-	retObj->Set(String::NewSymbol("absorbPctNB"), Number::New(absorbChance((result->stats)->absorbRating, (task->cdata)->absorbAdd)));
-	retObj->Set(String::NewSymbol("absorbPct"), Number::New(absorbChance((result->stats)->absorbRating, (task->cdata)->absorbAdd + (task->cdata)->absorbBonus)));
-	retObj->Set(String::NewSymbol("drKENB"), Number::New(dmgReductionKE(task->armor, (task->cdata)->drAddKE)));
-	retObj->Set(String::NewSymbol("drKE"), Number::New(dmgReductionKE(task->armor, (task->cdata)->drAddKE + (task->cdata)->drBonus)));
-	retObj->Set(String::NewSymbol("drIENB"), Number::New(dmgReductionIE((task->cdata)->drAddIE)));
-	retObj->Set(String::NewSymbol("drIE"), Number::New(dmgReductionIE((task->cdata)->drAddIE + (task->cdata)->drBonus)));
-	retObj->Set(String::NewSymbol("mitigation"), Number::New(result->mitigation));
+	Local<Object> beforeData = Object::New();
+	Local<Object> afterData = Object::New();
+	
+	afterData->Set(String::NewSymbol("defRating"), Number::New((result->stats)->defRating));
+	afterData->Set(String::NewSymbol("shieldRating"), Number::New((result->stats)->shieldRating));
+	afterData->Set(String::NewSymbol("absorbRating"), Number::New((result->stats)->absorbRating));
+	afterData->Set(String::NewSymbol("defPctNBNS"), Number::New(defenseChance((result->stats)->defRating, (task->cdata)->defenseAdd)));
+	afterData->Set(String::NewSymbol("defPctNB"), Number::New(defenseChance((result->stats)->defRating + task->stimBonus, (task->cdata)->defenseAdd)));
+	afterData->Set(String::NewSymbol("defPct"), Number::New(defenseChance((result->stats)->defRating + task->stimBonus, (task->cdata)->defenseAdd + (task->cdata)->defenseBonus)));
+	afterData->Set(String::NewSymbol("shieldPctNB"), Number::New(shieldChance((result->stats)->shieldRating, (task->cdata)->shieldAdd)));
+	afterData->Set(String::NewSymbol("shieldPct"), Number::New(shieldChance((result->stats)->shieldRating, (task->cdata)->shieldAdd + (task->cdata)->shieldBonus)));
+	afterData->Set(String::NewSymbol("absorbPctNB"), Number::New(absorbChance((result->stats)->absorbRating, (task->cdata)->absorbAdd)));
+	afterData->Set(String::NewSymbol("absorbPct"), Number::New(absorbChance((result->stats)->absorbRating, (task->cdata)->absorbAdd + (task->cdata)->absorbBonus)));
+	afterData->Set(String::NewSymbol("drKENB"), Number::New(dmgReductionKE(task->armor, (task->cdata)->drAddKE)));
+	afterData->Set(String::NewSymbol("drKE"), Number::New(dmgReductionKE(task->armor, (task->cdata)->drAddKE + (task->cdata)->drBonus)));
+	afterData->Set(String::NewSymbol("drIENB"), Number::New(dmgReductionIE((task->cdata)->drAddIE)));
+	afterData->Set(String::NewSymbol("drIE"), Number::New(dmgReductionIE((task->cdata)->drAddIE + (task->cdata)->drBonus)));
+	afterData->Set(String::NewSymbol("mitigation"), Number::New(result->mitigation));
+	
+	beforeData->Set(String::NewSymbol("defRating"), Number::New((task->startingStats)->defRating));
+	beforeData->Set(String::NewSymbol("shieldRating"), Number::New((task->startingStats)->shieldRating));
+	beforeData->Set(String::NewSymbol("absorbRating"), Number::New((task->startingStats)->absorbRating));
+	beforeData->Set(String::NewSymbol("defPctNBNS"), Number::New(defenseChance((task->startingStats)->defRating, (task->cdata)->defenseAdd)));
+	beforeData->Set(String::NewSymbol("defPctNB"), Number::New(defenseChance((task->startingStats)->defRating + task->stimBonus, (task->cdata)->defenseAdd)));
+	beforeData->Set(String::NewSymbol("defPct"), Number::New(defenseChance((task->startingStats)->defRating + task->stimBonus, (task->cdata)->defenseAdd + (task->cdata)->defenseBonus)));
+	beforeData->Set(String::NewSymbol("shieldPctNB"), Number::New(shieldChance((task->startingStats)->shieldRating, (task->cdata)->shieldAdd)));
+	beforeData->Set(String::NewSymbol("shieldPct"), Number::New(shieldChance((task->startingStats)->shieldRating, (task->cdata)->shieldAdd + (task->cdata)->shieldBonus)));
+	beforeData->Set(String::NewSymbol("absorbPctNB"), Number::New(absorbChance((task->startingStats)->absorbRating, (task->cdata)->absorbAdd)));
+	beforeData->Set(String::NewSymbol("absorbPct"), Number::New(absorbChance((task->startingStats)->absorbRating, (task->cdata)->absorbAdd + (task->cdata)->absorbBonus)));
+	beforeData->Set(String::NewSymbol("drKENB"), Number::New(dmgReductionKE(task->armor, (task->cdata)->drAddKE)));
+	beforeData->Set(String::NewSymbol("drKE"), Number::New(dmgReductionKE(task->armor, (task->cdata)->drAddKE + (task->cdata)->drBonus)));
+	beforeData->Set(String::NewSymbol("drIENB"), Number::New(dmgReductionIE((task->cdata)->drAddIE)));
+	beforeData->Set(String::NewSymbol("drIE"), Number::New(dmgReductionIE((task->cdata)->drAddIE + (task->cdata)->drBonus)));
+	
+	beforeData->Set(String::NewSymbol("mitigation"), Number::New(mitigation(task->dtypes, task->cdata, task->startingStats, task->armor, task->stimBonus, task->numRelics, task->relics, task->relictypes, task->time_per_swing)));
+	
+	
+	retObj->Set(String::NewSymbol("before"), beforeData);
+	retObj->Set(String::NewSymbol("after"), afterData);
 	
 	cbargv[1] = Local<Value>::New(retObj);
 	
@@ -329,6 +353,7 @@ AfterCalculations(uv_work_t *r)
 	free(task->relics);
 	free(task->relictypes);
 	free(task->rand_state);
+	free(task->startingStats);
   	delete task;
 		
 	if (try_catch.HasCaught()) {
@@ -346,7 +371,7 @@ Optimizer(const Arguments& args)
 	rk_state *rand_state = new rk_state;
 	rk_randomseed(rand_state);
 		
-	//Handle 5-7 arguments: dmgTypes/shieldBounds, classData, relicData, statBudget, armor, [stimBonus, [numSamples]], callback
+	//Handle 5-7 arguments: dmgTypes/shieldBounds, classData, relicData, startingStats, armor, [stimBonus, [numSamples]], callback
 	if (args.Length() < 5 || args.Length() > 8){
 		ThrowException(Exception::TypeError(String::New("Wrong number of arguments")));
     	return scope.Close(Undefined());
@@ -358,7 +383,7 @@ Optimizer(const Arguments& args)
 	Handle<Value> cbargv[cbargc] = { Null(), Null() };
 	
 	//Check parameter types for the main arguments
-	if (!args[0]->IsObject() || !args[1]->IsObject() || !args[2]->IsObject() || !args[3]->IsNumber() || !args[4]->IsNumber() || (args.Length() > 6 && !args[5]->IsNumber()) || (args.Length() > 7 && !args[6]->IsNumber())){
+	if (!args[0]->IsObject() || !args[1]->IsObject() || !args[2]->IsObject() || !args[3]->IsObject() || !args[4]->IsNumber() || (args.Length() > 6 && !args[5]->IsNumber()) || (args.Length() > 7 && !args[6]->IsNumber())){
 		cbargv[0] = Local<Value>::New(Exception::TypeError(String::New("Wrong arguments")));
 		cb->Call(Context::GetCurrent()->Global(), cbargc, cbargv);
 		
@@ -511,6 +536,28 @@ Optimizer(const Arguments& args)
 		}
 	}	
 	
+	const unsigned int startingStatCt = 3;
+	Local<Value> startingStatKey[startingStatCt] = {
+		String::NewSymbol("startingDef"),
+		String::NewSymbol("startingShield"),
+		String::NewSymbol("startingAbsorb")
+	};
+	
+	for (i = 0; i < startingStatCt; i++){
+		if (!((args[3]->ToObject())->Get(startingStatKey[i]))->IsNumber()){
+			cbargv[0] = Local<Value>::New(Exception::TypeError(String::New("Wrong startingStats values")));
+			cb->Call(Context::GetCurrent()->Global(), cbargc, cbargv);
+		
+			return scope.Close(Undefined());
+		}
+	}
+	
+	
+	statdist_t *startingStats = new statdist_t;
+	startingStats->defRating = ((args[3]->ToObject())->Get(startingStatKey[0]))->ToNumber()->Value();
+	startingStats->shieldRating = ((args[3]->ToObject())->Get(startingStatKey[1]))->ToNumber()->Value();
+	startingStats->absorbRating = ((args[3]->ToObject())->Get(startingStatKey[2]))->ToNumber()->Value();
+	
 	//Fill in damage type percentages
 	dmgtypes_t *dtypes = new dmgtypes_t;
 	dtypes->MRKE = (((args[0]->ToObject())->Get(dmgTypesProps[0]))->ToNumber())->Value();
@@ -537,7 +584,6 @@ Optimizer(const Arguments& args)
 	cdata->resistPct = (((args[1]->ToObject())->Get(classDataProps[9]))->ToNumber())->Value();
 	cdata->useKW = (((args[1]->ToObject())->Get(classDataProps[10]))->ToNumber())->Value();
 	
-	unsigned int statBudget = (args[3]->ToNumber())->Value();
 	unsigned int armor = (args[4]->ToNumber())->Value();
 	
 	unsigned int stimBonus = 0;
@@ -555,7 +601,7 @@ Optimizer(const Arguments& args)
 	task->dtypes = dtypes;
 	task->sbounds = sbounds;
 	task->cdata = cdata;
-	task->statBudget = statBudget;
+	task->startingStats = startingStats;
 	task->armor = armor;
 	task->numRelics = num_relics;
 	task->relics = relics;

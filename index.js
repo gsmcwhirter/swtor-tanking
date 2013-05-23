@@ -268,8 +268,8 @@ var optimizer = require("bindings")("swtor_tanking_optimizer.node")
   ;
   
 module.exports = {
-  optimize: function (klass, statBudget, armor, callback){
-    optimizer.optimize(otherData, classData[klass], {numRelics: 0}, statBudget, armor, 70, callback);
+  optimize: function (klass, startingStats, armor, callback){
+    optimizer.optimize(otherData, classData[klass], {numRelics: 0}, startingStats, armor, 70, callback);
   }
 , optimizer: optimizer
 , classData: classData

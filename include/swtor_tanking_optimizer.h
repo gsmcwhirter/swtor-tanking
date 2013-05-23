@@ -107,7 +107,7 @@ struct OptimizerTask {
 	dmgtypes_t *dtypes;
 	shieldbounds_t *sbounds;
 	classdata_t *cdata;
-	unsigned int statBudget;
+	statdist_t *startingStats;
 	unsigned int armor;
 	unsigned int numRelics;
 	relic_t **relics;
