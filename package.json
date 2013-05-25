@@ -1,6 +1,6 @@
 {
   "name": "swtor-tanking",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Tank stat optimization package for SW:TOR",
   "main": "index.js",
   "scripts": {
