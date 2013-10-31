@@ -116,16 +116,16 @@ mitigation(dmgtypes_t *dtypes, classdata_t *cdata, statdist_t *stats, unsigned i
 	s = shieldChance(stats->shieldRating, cdata->shieldAdd + cdata->shieldBonus);
 	r = cdata->resistPct;
 	
-	int has_proc_relic = 0;
+	int has_proc_relic[3] = {0, 0, 0}; //REDOUBT and AMP
 	int has_click_relic = 0;
 	
 	for (i = 0; i < num_relics; i++){
 		relic_t * relic = *(relics + i);
 		switch (*(relictypes + i)){
 			case RELIC_TYPE_PROC:
-				if (!has_proc_relic || (relic->prelic)->can_stack){
+				if (!has_proc_relic[(relic->prelic)->proc_type] || (relic->prelic)->can_stack){
 					if (!(relic->prelic)->can_stack){
-						has_proc_relic = 1;	
+						has_proc_relic[(relic->prelic)->proc_type] = 1;	
 					}
 					
 					if ((relic->prelic)->stat == RELIC_STATTYPE_DEF){

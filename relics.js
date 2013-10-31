@@ -7,6 +7,7 @@ module.exports = {
     , rate: 0.30
     , duration: 6
     , cooldown: 20
+    , relic_type: 1 //redoubt
     , can_stack: 0
     } 
   , shield_amp: {
@@ -16,6 +17,7 @@ module.exports = {
     , rate: 1.0
     , duration: 6
     , cooldown: 20
+    , relic_type: 2 //amp
     , can_stack: 0
     }
   , imperiling: {
@@ -45,6 +47,7 @@ module.exports = {
     , rate: 0.30
     , duration: 6
     , cooldown: 20
+    , relic_type: 1 //redoubt
     , can_stack: 0
     } 
   , shield_amp: {
@@ -54,6 +57,7 @@ module.exports = {
     , rate: 1.0
     , duration: 6
     , cooldown: 20
+    , relic_type: 2 //amp
     , can_stack: 0
     }
   , imperiling: {
@@ -83,6 +87,7 @@ module.exports = {
     , rate: 0.30
     , duration: 6
     , cooldown: 20
+    , relic_type: 1 //redoubt
     , can_stack: 0
     } 
   , shield_amp: {
@@ -92,6 +97,7 @@ module.exports = {
     , rate: 1.0
     , duration: 6
     , cooldown: 20
+    , relic_type: 2 //amp
     , can_stack: 0
     }
   , imperiling: {
@@ -121,6 +127,7 @@ module.exports = {
     , rate: 0.30
     , duration: 6
     , cooldown: 20
+    , relic_type: 1 //redoubt
     , can_stack: 0
     } 
   , shield_amp: {
@@ -130,6 +137,7 @@ module.exports = {
     , rate: 1.0
     , duration: 6
     , cooldown: 20
+    , relic_type: 2 //amp
     , can_stack: 0
     }
   , imperiling: {
@@ -159,6 +167,7 @@ module.exports = {
     , rate: 0.30
     , duration: 6
     , cooldown: 20
+    , relic_type: 1 //redoubt
     , can_stack: 1
     } 
   , shield_amp: {
@@ -168,6 +177,7 @@ module.exports = {
     , rate: 1.0
     , duration: 6
     , cooldown: 20
+    , relic_type: 2 //amp
     , can_stack: 1
     }
   }
@@ -179,6 +189,7 @@ module.exports = {
     , rate: 0.30
     , duration: 6
     , cooldown: 20
+    , relic_type: 1 //redoubt
     , can_stack: 1
     } 
   , shield_amp: {
@@ -188,6 +199,7 @@ module.exports = {
     , rate: 1.0
     , duration: 6
     , cooldown: 20
+    , relic_type: 2 //amp
     , can_stack: 1
     }
   }
@@ -199,6 +211,7 @@ module.exports = {
     , rate: 1.0
     , duration: 6
     , cooldown: 20
+    , relic_type: 2 //amp
     , can_stack: 0
     }
   }
@@ -210,6 +223,7 @@ module.exports = {
     , rate: 1.0
     , duration: 6
     , cooldown: 20
+    , relic_type: 2 //amp
     , can_stack: 0
     }
   }

@@ -8,6 +8,9 @@
 #define RELIC_STATTYPE_SHIELD 2
 #define RELIC_STATTYPE_ABSORB 3
 
+#define RELIC_PROCTYPE_REDOUBT 1
+#define RELIC_PROCTYPE_AMP 2
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -63,6 +66,7 @@ struct ProcRelic {
 	unsigned int bonus_rating;
 	double rate;
 	double duration_time;
+	unsigned int proc_type;
 	double cooldown_time;
 	unsigned int can_stack;
 };

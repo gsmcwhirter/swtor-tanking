@@ -194,7 +194,7 @@ Optimizer(const Arguments& args)
 	else {
 		num_relics = ((args[2]->ToObject())->Get(nRelics))->ToNumber()->Value();
 		
-		if (num_relics < 0 || num_relics > 2){
+		if (num_relics > 2){ //|| num_relics < 0 -- but unsigned
 			cbargv[0] = Local<Value>::New(Exception::TypeError(String::New("Wrong numRelics value")));
 			cb->Call(Context::GetCurrent()->Global(), cbargc, cbargv);
 	
@@ -219,6 +219,7 @@ Optimizer(const Arguments& args)
 				pr1->bonus_rating = (tmpobj->Get(String::NewSymbol("rating")))->ToNumber()->Value();
 				pr1->rate = (tmpobj->Get(String::NewSymbol("rate")))->ToNumber()->Value();
 				pr1->duration_time = (tmpobj->Get(String::NewSymbol("duration")))->ToNumber()->Value();
+				pr1->proc_type = (tmpobj->Get(String::NewSymbol("proc_type")))->ToNumber()->Value();
 				pr1->cooldown_time = (tmpobj->Get(String::NewSymbol("cooldown")))->ToNumber()->Value();
 				pr1->can_stack = (tmpobj->Get(String::NewSymbol("can_stack")))->ToNumber()->Value();
 				
@@ -257,6 +258,7 @@ Optimizer(const Arguments& args)
 				pr2->bonus_rating = (tmpobj->Get(String::NewSymbol("rating")))->ToNumber()->Value();
 				pr2->rate = (tmpobj->Get(String::NewSymbol("rate")))->ToNumber()->Value();
 				pr2->duration_time = (tmpobj->Get(String::NewSymbol("duration")))->ToNumber()->Value();
+				pr2->proc_type = (tmpobj->Get(String::NewSymbol("proc_type")))->ToNumber()->Value();
 				pr2->cooldown_time = (tmpobj->Get(String::NewSymbol("cooldown")))->ToNumber()->Value();
 				pr2->can_stack = (tmpobj->Get(String::NewSymbol("can_stack")))->ToNumber()->Value();
 				
