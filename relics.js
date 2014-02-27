@@ -79,6 +79,46 @@ module.exports = {
     , cooldown: 120 //confirm?
     }
   }
+,  dread_forged: {
+    redoubt: {
+      type: 1 //proc
+    , stat: 1 //defense
+    , rating: 740
+    , rate: 0.30
+    , duration: 6
+    , cooldown: 20
+    , proc_type: 1 //redoubt
+    , can_stack: 0
+    } 
+  , shield_amp: {
+      type: 1 //proc
+    , stat: 3 //absorb
+    , rating: 740
+    , rate: 1.0
+    , duration: 6
+    , cooldown: 20
+    , proc_type: 2 //amp
+    , can_stack: 0
+    }
+  , imperiling: {
+      type: 2 //click
+    , stat1: 1 //defense
+    , stat2: 0 //none
+    , rating1: 490
+    , rating2: 0
+    , duration: 20
+    , cooldown: 120 //confirm?
+    }
+  , shrouded: {
+      type: 2 //click
+    , stat1: 2 //shield
+    , stat2: 3 //absorb
+    , rating1: 320
+    , rating2: 320
+    , duration: 20
+    , cooldown: 120 //confirm?
+    }
+  }
 , dreadguard: {
     redoubt: {
       type: 1 //proc
